@@ -1,0 +1,299 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
+import {
+  ActivityIcon,
+  FileTextIcon,
+  LinkIcon,
+  LogOutIcon,
+  MoonIcon,
+  SunIcon,
+} from "../components/icons/Icons";
+
+
+import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
+
+
+
+
+
+export default function DashboardLayout({ children }) {
+  const { user, isInitializing, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const pathname = usePathname();
+  const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+  const isWorkspace = pathname?.includes("/dashboard/resumes/") && pathname.split("/").length > 3;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted && !isInitializing && !user) {
+      router.replace("/login");
+    }
+  }, [isInitializing, user, router, mounted]);
+
+  // To prevent hydration mismatch, just return empty during SSR
+  if (!mounted) {
+    return (
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[#f0fdf4] dark:bg-[#09090b]" />
+    );
+  }
+
+  // If we are done initializing and there's no user, we are redirecting. Don't render the shell.
+  if (!isInitializing && !user) {
+    return null;
+  }
+
+  const navItems = [
+    { label: "Resumes", href: "/dashboard/resumes", icon: <FileTextIcon /> },
+    { label: "Links", href: "/dashboard/links", icon: <LinkIcon /> },
+    {
+      label: "Analytics",
+      href: "/dashboard/analytics",
+      icon: <ActivityIcon />,
+    },
+  ];
+
+  const activeItem =
+    navItems.find(
+      (item) => pathname === item.href || pathname?.startsWith(`${item.href}/`),
+    ) || navItems[0];
+
+  return (
+    <div
+      className="h-[100dvh] overflow-hidden bg-[#f0fdf4] dark:bg-[#022c22] text-[#064e3b]/90 dark:text-[#f8fafc]/90 selection:bg-[#064e3b] dark:selection:bg-[#f8fafc] selection:text-white dark:selection:text-[#022c22] relative transition-colors duration-300"
+    >
+      {/* Background glowing orbs */}
+      <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] rounded-full bg-emerald-100/40 dark:hidden blur-[100px] pointer-events-none transition-colors duration-500" />
+      <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] rounded-full bg-emerald-100/40 dark:hidden blur-[100px] pointer-events-none transition-colors duration-500" />
+
+      <div className="flex h-[100dvh] relative z-10">
+        {/* Sidebar */}
+        <motion.aside
+          initial={{ x: -280, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="relative hidden h-full w-[280px] shrink-0 md:flex md:flex-col"
+        >
+          {/* Glass background for sidebar */}
+          <div className="absolute inset-0 bg-white/70 dark:bg-[#16171b] backdrop-blur-2xl dark:backdrop-blur-none border-r border-white/60 dark:border-white/5 shadow-[4px_0_24px_rgba(0,0,0,0.02)] dark:shadow-none z-0 transition-colors duration-300" />
+
+          <div className="relative z-10 flex h-full flex-col px-6 py-8">
+            <Link
+              href="/dashboard"
+              className="group mb-6 flex items-center rounded-xl px-1 py-1 no-underline transition-transform active:scale-95"
+            >
+              <span className="flex items-end text-[1.8rem] font-semibold tracking-tight leading-none text-[#064e3b]/90 dark:text-[#f8fafc]/90">
+                resume
+                <span className="text-[#064e3b]/90 dark:text-[#f8fafc]/90 drop-shadow-sm dark:drop-shadow-none dark:shadow-none ml-0.5">
+                  X
+                </span>
+              </span>
+            </Link>
+
+            <nav className="flex flex-1 flex-col gap-2">
+              {navItems.map((item) => {
+                const isActive =
+                  pathname === item.href || pathname?.startsWith(`${item.href}/`);
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 ${isActive
+                      ? "text-[#064e3b]/90 dark:text-[#f8fafc]/90 hover:text-[#064e3b] dark:hover:text-white"
+                      : "text-[#4B5E76] dark:text-[#a1a1aa] hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#111827] dark:hover:text-[#f8fafc]"
+                      }`}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeNavIndicator"
+                        className="absolute inset-0 bg-[#064e3b]/[0.06] dark:bg-white/10 rounded-xl z-0"
+                        transition={{
+                          type: "spring",
+                          stiffness: 350,
+                          damping: 30,
+                        }}
+                      />
+                    )}
+                    <span className="relative z-10 flex opacity-90 transition-transform duration-300 group-hover:scale-105">
+                      {item.icon}
+                    </span>
+                    <span className="relative z-10">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+
+            <div className="mt-6 pt-6 relative">
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#064e3b]/10 dark:via-white/10 to-transparent" />
+              
+              <button
+                onClick={toggleTheme}
+                className="group w-full mb-4 flex items-center gap-3 px-3 rounded-xl py-2.5 text-sm font-medium text-[#4B5E76] dark:text-[#a1a1aa] transition-colors hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#111827] dark:hover:text-[#f8fafc]"
+              >
+                <span className="opacity-90 transition-transform duration-300 group-hover:scale-105">
+                  {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+                </span>
+                {theme === "dark" ? "Light Mode" : "Dark Mode"}
+              </button>
+
+              <div className="mb-4 flex items-center gap-3 px-2 rounded-xl py-2 transition-colors hover:bg-black/5 dark:hover:bg-white/5">
+                <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white dark:border-[#27272a] bg-white dark:bg-[#18181b] shadow-sm dark:shadow-none">
+                  {user ? (
+                    <Image
+                      src={user.avatar || "/default.webp"}
+                      alt="Avatar"
+                      width={44}
+                      height={44}
+                      unoptimized
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-gray-200 dark:bg-zinc-800 animate-pulse" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  {user ? (
+                    <>
+                      <div className="truncate text-sm font-semibold text-[#064e3b]/90 dark:text-[#f8fafc]/90">
+                        {user.name}
+                      </div>
+                      <div className="truncate text-[11px] font-medium text-[#6B7280] dark:text-[#a1a1aa]">
+                        @{user.username}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="h-3.5 w-20 rounded-md bg-gray-200 dark:bg-zinc-800 animate-pulse" />
+                      <div className="h-2.5 w-14 rounded-md bg-gray-100 dark:bg-zinc-800 animate-pulse" />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={logout}
+                className="group flex w-full items-center justify-center gap-2 rounded-xl border border-[#064e3b]/[0.08] dark:border-white/10 bg-[#064e3b]/[0.03] dark:bg-white/5 px-3 py-2.5 text-sm font-medium text-[#4B5E76] dark:text-[#a1a1aa] transition-all hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 hover:border-rose-100 dark:hover:border-rose-500/20 active:scale-[0.98]"
+              >
+                <span className="transition-transform group-hover:-translate-x-1">
+                  <LogOutIcon />
+                </span>
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </motion.aside>
+
+        <main className="relative h-full flex-1 overflow-y-auto perspective-[1000px]">
+          {/* Mobile Header */}
+          <motion.header
+            initial={{ y: -100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="sticky top-0 z-30 border-b border-white/60 dark:border-white/5 bg-white/70 dark:bg-[#16171b] backdrop-blur-xl dark:backdrop-blur-none md:hidden shadow-sm dark:shadow-none transition-colors duration-300"
+          >
+            <div className="px-5 pb-3 pt-5">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <Link href="/dashboard" className="no-underline">
+                  <span className="flex items-end text-2xl font-semibold tracking-tight leading-none text-[#064e3b]/90 dark:text-[#f8fafc]/90">
+                    resume
+                    <span
+                      className="text-[#064e3b]/90 dark:text-[#f8fafc]/90 ml-0.5"
+                    >
+                      X
+                    </span>
+                  </span>
+                </Link>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={toggleTheme}
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-white/50 dark:bg-white/5 text-[#4B5E76] dark:text-[#a1a1aa] border border-white/60 dark:border-white/5 shadow-sm dark:shadow-none"
+                  >
+                    {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+                  </button>
+                  <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border-2 border-white dark:border-[#27272a] bg-white dark:bg-[#16171b] shadow-sm dark:shadow-none">
+                    {user ? (
+                      <Image
+                        src={user.avatar || "/default.webp"}
+                        alt="Avatar"
+                        width={36}
+                        height={36}
+                        unoptimized
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="h-full w-full bg-gray-200 dark:bg-zinc-800 animate-pulse" />
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none]">
+                {navItems.map((item) => {
+                  const isActive =
+                    pathname === item.href ||
+                    pathname?.startsWith(`${item.href}/`);
+
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`relative flex min-w-[100px] flex-none items-center justify-center gap-2 rounded-xl px-3 py-2 text-[13px] font-medium whitespace-nowrap transition-all ${isActive
+                        ? "text-[#064e3b]/90 dark:text-[#f8fafc]/90 hover:text-[#064e3b] dark:hover:text-white"
+                        : "border border-white/60 dark:border-white/5 bg-white/50 dark:bg-white/5 text-[#4B5E76] dark:text-[#a1a1aa] hover:text-[#111827] dark:hover:text-[#f8fafc]"
+                        }`}
+                    >
+                      {isActive && (
+                        <motion.div
+                          layoutId="mobileNavIndicator"
+                          className="absolute inset-0 rounded-xl bg-[#064e3b]/[0.06] dark:bg-white/10 z-0"
+                          transition={{
+                            type: "spring",
+                            stiffness: 350,
+                            damping: 30,
+                          }}
+                        />
+                      )}
+                      <span className="relative z-10 flex">{item.icon}</span>
+                      <span className="relative z-10">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          </motion.header>
+
+          <div className="px-5 py-8 sm:px-8 md:px-12 md:py-10 lg:px-16 min-h-full">
+            <motion.div
+              key={pathname}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className={isWorkspace ? "mx-auto max-w-[1400px]" : "mx-auto max-w-[1000px]"}
+            >
+              {isInitializing ? (
+                <div className="space-y-6">
+                  <div className="h-10 w-48 rounded-xl bg-black/5 dark:bg-white/5 animate-pulse" />
+                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="h-[220px] rounded-2xl border border-black/5 dark:border-white/5 bg-white/50 dark:bg-[#16171b]/50 animate-pulse shadow-sm dark:shadow-none" />
+                    <div className="h-[220px] rounded-2xl border border-black/5 dark:border-white/5 bg-white/50 dark:bg-[#16171b]/50 animate-pulse shadow-sm dark:shadow-none" />
+                    <div className="h-[220px] rounded-2xl border border-black/5 dark:border-white/5 bg-white/50 dark:bg-[#16171b]/50 animate-pulse shadow-sm dark:shadow-none" />
+                  </div>
+                </div>
+              ) : (
+                children
+              )}
+            </motion.div>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
