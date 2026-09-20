@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 const AuthContext = createContext();
 const backendUrl =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+  process.env.NEXT_PUBLIC_BACKEND_URL || "https://resume-vault-abfe.onrender.com/";
 const TOKEN_KEY = "token";
 const USER_KEY = "auth_user";
 
