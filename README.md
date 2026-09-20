@@ -1,4 +1,5 @@
-                                        # 📄 ResumeVault
+<div align="center">
+  # 📄 ResumeVault
 
 <div align="center">
 
