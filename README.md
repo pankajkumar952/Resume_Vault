@@ -1,8 +1,9 @@
 <div align="center">
-  📄 ResumeVault
+
+### 📄ResumeVault
 
 <div align="center">
-
+  
 ### 🚀 Modern Resume Management & Portfolio Platform
 
 **Built by Er. Pankaj Kumar**
