@@ -1,6 +1,4 @@
-<div align="center">
-
-### 📄ResumeVault
+📄ResumeVault
 
 <div align="center">
   
